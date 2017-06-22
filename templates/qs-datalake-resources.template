@@ -415,20 +415,20 @@
                                                                                     {
                                                                                        "Effect": "Allow",
                                                                                        "Action": [
-																									"es:AddTags",
-																									"es:ListTags",
-																									"es:RemoveTags",
-																									"es:ESHttpGet",
-																									"es:ESHttpHead",
-																									"es:ESHttpPost",
-																									"es:ESHttpPut",
-																									"es:CreateElasticsearchDomain",
-																									"es:DescribeElasticsearchDomain",
-																									"es:DescribeElasticsearchDomains",
-																									"es:DescribeElasticsearchDomainConfig",
-																									"es:ListDomainNames",
-																									"es:UpdateElasticsearchDomainConfig"
-																								],
+																									                                            "es:AddTags",
+																									                                            "es:ListTags",
+																									                                            "es:RemoveTags",
+																									                                            "es:ESHttpGet",
+																									                                            "es:ESHttpHead",
+																									                                            "es:ESHttpPost",
+																									                                            "es:ESHttpPut",
+																									                                            "es:CreateElasticsearchDomain",
+																									                                            "es:DescribeElasticsearchDomain",
+																									                                            "es:DescribeElasticsearchDomains",
+																								                                            	"es:DescribeElasticsearchDomainConfig",
+																									                                            "es:ListDomainNames",
+																									                                            "es:UpdateElasticsearchDomainConfig"
+																							                                              	],
                                                                                        "Resource":[{"Fn::Join" : [ "", ["arn:aws:es:::domain/dles-",{"Fn::Select": ["4",{"Fn::Split": ["-",{ "Fn::Select" : [ "2",{ "Fn::Split": ["/",{"Ref": "AWS::StackId"} ] } ] } ] } ] },":*"]]}]
                                                                                    },
                                                                                    {
