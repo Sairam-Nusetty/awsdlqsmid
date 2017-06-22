@@ -7,13 +7,12 @@ global:
     - us-east-1
     - us-west-2
   reporting: true
-
 tests:
   quickstart-data-lake-cloudwickt1:
     parameter_input: qs-datalake-defaults.json
-    template_file: aws-datalake-qs.template
+    template_file: qs-datalake-master.template
+    
   owner: quickstart@amazon.com
-  #subjected to change
   qsname: quickstart-aws-datalake
   regions:
     - us-east-1
@@ -22,4 +21,4 @@ tests:
 tests:
   defaults:
     parameter_input: aws-datalake-defaults.json
-    template_file: aws-datalake-qs.template
+    template_file: qs-datalake-master.template

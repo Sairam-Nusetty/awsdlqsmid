@@ -367,12 +367,6 @@
                         }
                     }
 
-
-
-
-
-
-
   },
   "Outputs" : {
                 "VPCInfo":
@@ -404,8 +398,6 @@
                   "Description"                : "Public Subnet ID",
                   "Value"                      : {"Fn::GetAtt": ["VPCStack", "Outputs.PublicSubnet2ID"]}
                 }
-
-
 
   }
 }
