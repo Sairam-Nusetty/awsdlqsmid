@@ -361,17 +361,11 @@
                               "ElasticSearchVolumeSize"    : {"Ref":"ElasticSearchVolumeSize"},
                               "ElasticSearchVolumeType"    : {"Ref":"ElasticSearchVolumeType"},
                               "ElasticSearchInstanceType"  : {"Ref":"ElasticSearchInstanceType"},
-                              "ElasticSearchInstanceCount" : {"Ref":"ElasticSearchInstanceCount"}
-
+                              "ElasticSearchInstanceCount" : {"Ref":"ElasticSearchInstanceCount"},					
+							  "KeyPairName" : {"Ref":"KeyPairName"}
                             }
                         }
                     }
-
-
-
-
-
-
 
   },
   "Outputs" : {

@@ -149,6 +149,11 @@
 			"Type": "String",
 			"Default": "gp2",
 			"AllowedValues": ["gp2", "standard", "io1"]
+		},
+		"KeyPairName": {
+			"Description": "Name of an existing EC2 KeyPair to enable SSH access to the Webserver instance",
+			"Type": "AWS::EC2::KeyPair::KeyName",
+			"ConstraintDescription": "Can contain only ASCII characters."
 		}
 	},
 
@@ -1469,6 +1474,7 @@
 				}]
 			}
 		},
+
 		"EC2WebserverRole": {
 			"Type": "AWS::IAM::Role",
 			"Properties": {
@@ -1495,316 +1501,227 @@
 						"Action": ["sts:AssumeRole"]
 					}]
 				},
+
 				"Path": "/",
-				"Policies": [{
-					"PolicyName": {
-						"Fn::Join": ["", ["dl-webserver-policy-", {
-							"Fn::Select": ["4", {
-								"Fn::Split": ["-", {
-									"Fn::Select": ["2", {
-										"Fn::Split": ["/", {
-											"Ref": "AWS::StackId"
+
+				"Policies": [
+
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-s3-and-cf-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
 										}]
 									}]
 								}]
-							}]
-						}]]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
+									"Effect": "Allow",
+									"Action": [
+										"s3:CreateBucket",
+										"s3:DeleteBucket",
+										"s3:DeleteObject",
+										"s3:Get*",
+										"s3:List*",
+										"s3:Put*"
+									],
+									"Resource": ["*"]
+								},
+								{
+									"Effect": "Allow",
+									"Action": [
+										"cloudformation:DescribeStackEvents",
+										"cloudformation:DescribeStackResource",
+										"cloudformation:DescribeStackResources",
+										"cloudformation:ListStackResources",
+										"cloudformation:SignalResource"
+									],
+									"Resource": ["arn:aws:cloudformation:*:*:*"]
+								}
+							]
+						}
 					},
-					"PolicyDocument": {
-						"Version": "2012-10-17",
-						"Statement": [{
-								"Effect": "Allow",
-								"Action": [
-									"s3:CreateBucket",
-									"s3:AbortMultipartUpload",
-									"s3:DeleteBucket",
-									"s3:DeleteBucketPolicy",
-									"s3:DeleteObject",
-									"s3:DeleteObjectVersion",
-									"s3:GetAccelerateConfiguration",
-									"s3:GetBucketAcl",
-									"s3:GetBucketCORS",
-									"s3:GetBucketLocation",
-									"s3:GetBucketLogging",
-									"s3:GetBucketNotification",
-									"s3:GetBucketPolicy",
-									"s3:GetBucketTagging",
-									"s3:GetBucketVersioning",
-									"s3:GetLifecycleConfiguration",
-									"s3:GetObject",
-									"s3:GetObjectAcl",
-									"s3:GetObjectTagging",
-									"s3:GetObjectVersion",
-									"s3:GetObjectVersionAcl",
-									"s3:GetReplicationConfiguration",
-									"s3:ListAllMyBuckets",
-									"s3:ListBucket",
-									"s3:ListBucketMultipartUploads",
-									"s3:ListBucketVersions",
-									"s3:ListMultipartUploadParts",
-									"s3:PutAccelerateConfiguration",
-									"s3:PutBucketAcl",
-									"s3:PutBucketCORS",
-									"s3:PutBucketLogging",
-									"s3:PutBucketNotification",
-									"s3:PutBucketPolicy",
-									"s3:PutBucketRequestPayment",
-									"s3:PutBucketTagging",
-									"s3:PutBucketVersioning",
-									"s3:PutLifecycleConfiguration",
-									"s3:PutReplicationConfiguration",
-									"s3:PutObject",
-									"s3:PutObjectAcl",
-									"s3:PutObjectTagging",
-									"s3:PutObjectVersionAcl",
-									"s3:PutObjectVersionTagging",
-									"s3:ReplicateDelete",
-									"s3:ReplicateObject",
-									"s3:RestoreObject"
-								],
-								"Resource": ["*"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"cloudformation:CreateChangeSet",
-									"cloudformation:CancelUpdateStack",
-									"cloudformation:ContinueUpdateRollback",
-									"cloudformation:CreateStack",
-									"cloudformation:CreateUploadBucket",
-									"cloudformation:DeleteStack",
-									"cloudformation:DescribeAccountLimits",
-									"cloudformation:DescribeChangeSet",
-									"cloudformation:DescribeStackEvents",
-									"cloudformation:DescribeStackResource",
-									"cloudformation:DescribeStackResources",
-									"cloudformation:DescribeStacks",
-									"cloudformation:EstimateTemplateCost",
-									"cloudformation:ExecuteChangeSet",
-									"cloudformation:GetStackPolicy",
-									"cloudformation:GetTemplate",
-									"cloudformation:GetTemplateSummary",
-									"cloudformation:ListChangeSets",
-									"cloudformation:ListStackResources",
-									"cloudformation:ListStacks",
-									"cloudformation:SetStackPolicy",
-									"cloudformation:SignalResource"
-								],
-								"Resource": ["arn:aws:cloudformation:::"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"autoscaling:AttachInstances",
-									"autoscaling:AttachLoadBalancers",
-									"autoscaling:CompleteLifecycleAction",
-									"autoscaling:CreateAutoScalingGroup",
-									"autoscaling:CreateLaunchConfiguration",
-									"autoscaling:CreateOrUpdateTags",
-									"autoscaling:DeleteAutoScalingGroup",
-									"autoscaling:DeleteLaunchConfiguration",
-									"autoscaling:DeleteLifecycleHook",
-									"autoscaling:DeleteNotificationConfiguration",
-									"autoscaling:DeletePolicy",
-									"autoscaling:DeleteScheduledAction",
-									"autoscaling:DeleteTags",
-									"autoscaling:DescribeAccountLimits",
-									"autoscaling:DescribeAdjustmentTypes",
-									"autoscaling:DescribeAutoScalingGroups",
-									"autoscaling:DescribeAutoScalingInstances",
-									"autoscaling:DescribeAutoScalingNotificationTypes",
-									"autoscaling:DescribeLaunchConfigurations",
-									"autoscaling:DescribeLifecycleHookTypes",
-									"autoscaling:DescribeLifecycleHooks",
-									"autoscaling:DescribeLoadBalancers",
-									"autoscaling:DescribeMetricCollectionTypes",
-									"autoscaling:DescribeNotificationConfigurations",
-									"autoscaling:DescribePolicies",
-									"autoscaling:DescribeScalingActivities",
-									"autoscaling:DescribeScalingProcessTypes",
-									"autoscaling:DescribeScheduledActions",
-									"autoscaling:DescribeTags",
-									"autoscaling:DescribeTerminationPolicyTypes",
-									"autoscaling:DetachInstances",
-									"autoscaling:DetachLoadBalancers",
-									"autoscaling:DisableMetricsCollection",
-									"autoscaling:EnableMetricsCollection",
-									"autoscaling:EnterStandby",
-									"autoscaling:ExecutePolicy",
-									"autoscaling:ExitStandby",
-									"autoscaling:PutLifecycleHook",
-									"autoscaling:PutNotificationConfiguration",
-									"autoscaling:PutScalingPolicy",
-									"autoscaling:PutScheduledUpdateGroupAction",
-									"autoscaling:RecordLifecycleActionHeartbeat",
-									"autoscaling:ResumeProcesses",
-									"autoscaling:SetDesiredCapacity",
-									"autoscaling:SetInstanceHealth",
-									"autoscaling:SetInstanceProtection",
-									"autoscaling:SuspendProcesses",
-									"autoscaling:TerminateInstanceInAutoScalingGroup",
-									"autoscaling:UpdateAutoScalingGroup"
-								],
-								"Resource": ["arn:aws:autoscaling:::"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
 
-									"cloudtrail:AddTags",
-									"cloudtrail:CreateTrail",
-									"cloudtrail:DeleteTrail",
-									"cloudtrail:DescribeTrails",
-									"cloudtrail:GetEventSelectors",
-									"cloudtrail:GetTrailStatus",
-									"cloudtrail:ListPublicKeys",
-									"cloudtrail:ListTags",
-									"cloudtrail:LookupEvents",
-									"cloudtrail:PutEventSelectors",
-									"cloudtrail:RemoveTags",
-									"cloudtrail:StartLogging",
-									"cloudtrail:StopLogging",
-									"cloudtrail:UpdateTrail"
-								],
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-asg-and-cloudtrail-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
+									"Effect": "Allow",
+									"Action": ["*"],
+									"Resource": ["arn:aws:autoscaling:*:*:*"]
+								},
+								{
+									"Effect": "Allow",
+									"Action": [
 
-								"Resource": ["arn:aws:cloudtrail:*:*:*"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"logs:CreateLogGroup",
-									"logs:CreateLogStream",
-									"logs:DeleteDestination",
-									"logs:DeleteLogGroup",
-									"logs:DeleteLogStream",
-									"logs:DescribeDestinations",
-									"logs:DescribeExportTasks",
-									"logs:DescribeLogGroups",
-									"logs:DescribeLogStreams",
-									"logs:FilterLogEvents",
-									"logs:GetLogEvents",
-									"logs:PutDestination",
-									"logs:PutDestinationPolicy",
-									"logs:PutLogEvents"
-								],
-								"Resource": ["arn:aws:logs:*:*:*"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"cloudwatch:DescribeAlarmHistory",
-									"cloudwatch:DeleteAlarms",
-									"cloudwatch:DescribeAlarms",
-									"cloudwatch:DescribeAlarmsForMetric",
-									"cloudwatch:DisableAlarmActions",
-									"cloudwatch:EnableAlarmActions",
-									"cloudwatch:GetMetricData",
-									"cloudwatch:GetMetricStatistics",
-									"cloudwatch:ListMetrics",
-									"cloudwatch:PutMetricAlarm",
-									"cloudwatch:PutMetricData",
-									"cloudwatch:SetAlarmState"
-								],
-								"Resource": ["arn:aws:cloudwatch:*:*:*"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"ec2:AllocateAddress",
-									"ec2:AllocateHosts",
-									"ec2:AssignPrivateIpAddresses",
-									"ec2:AssociateAddress",
-									"ec2:AssociateIamInstanceProfile",
-									"ec2:AssociateRouteTable",
-									"ec2:AttachClassicLinkVpc",
-									"ec2:AttachInternetGateway",
-									"ec2:AttachNetworkInterface",
-									"ec2:AttachVolume",
-									"ec2:AuthorizeSecurityGroupEgress",
-									"ec2:AuthorizeSecurityGroupIngress",
-									"ec2:ConfirmProductInstance",
-									"ec2:CopyImage",
-									"ec2:CopySnapshot",
-									"ec2:CreateFlowLogs",
-									"ec2:CreateImage",
-									"ec2:CreateInstanceExportTask",
-									"ec2:CreateSnapshot",
-									"ec2:DescribeAccountAttributes",
-									"ec2:DescribeAddresses",
-									"ec2:DescribeAvailabilityZones",
-									"ec2:DescribeBundleTasks",
-									"ec2:DescribeClassicLinkInstances",
-									"ec2:DescribeConversionTasks",
-									"ec2:DescribeCustomerGateways",
-									"ec2:DescribeHosts",
-									"ec2:DescribeHostReservations",
-									"ec2:DescribeHostReservationOfferings",
-									"ec2:DescribeIamInstanceProfileAssociation",
-									"ec2:DescribeIdentityIdFormat",
-									"ec2:DescribeIdFormat",
-									"ec2:DescribeImageAttribute",
-									"ec2:DescribeImages",
-									"ec2:DescribeImportImageTasks",
-									"ec2:DescribeImportSnapshotTasks",
-									"ec2:DescribeInstanceAttribute",
-									"ec2:DescribeInstanceStatus",
-									"ec2:DescribeInstances",
-									"ec2:DescribeInternetGateways",
-									"ec2:DescribeKeyPairs",
-									"ec2:DescribeMovingAddresses",
-									"ec2:DescribeNatGateways",
-									"ec2:DescribeNetworkAcls",
-									"ec2:DescribeNetworkInterfaceAttribute",
-									"ec2:DescribeNetworkInterfaces",
-									"ec2:DescribePlacementGroups",
-									"ec2:DescribePrefixLists",
-									"ec2:DescribeRegions",
-									"ec2:DescribeRouteTables",
-									"ec2:DescribeSecurityGroups",
-									"ec2:DescribeSnapshotAttribute",
-									"ec2:DescribeSnapshots",
-									"ec2:DescribeStaleSecurityGroups",
-									"ec2:DescribeSubnets",
-									"ec2:DescribeTags",
-									"ec2:DescribeVolumeAttribute",
-									"ec2:DescribeVolumesModifications",
-									"ec2:DescribeVolumeStatus",
-									"ec2:DescribeVolumes",
-									"ec2:DescribeVpcAttribute",
-									"ec2:DescribeVpcClassicLink",
-									"ec2:DescribeVpcEndpointServices",
-									"ec2:DescribeVpcEndpoints",
-									"ec2:DescribeVpcPeeringConnections",
-									"ec2:DescribeVpcs",
-									"ec2:GetConsoleOutput",
-									"ec2:GetPasswordData",
-									"ec2:ImportImage",
-									"ec2:ImportInstance",
-									"ec2:ImportKeyPair",
-									"ec2:ImportSnapshot",
-									"ec2:ImportVolume",
-									"ec2:ModifyHosts",
-									"ec2:MonitorInstances",
-									"ec2:MoveAddressToVpc",
-									"ec2:RebootInstances",
-									"ec2:RegisterImage",
-									"ec2:ReleaseAddress",
-									"ec2:ReleaseHosts",
-									"ec2:ReportInstanceStatus",
-									"ec2:RunInstances",
-									"ec2:RunScheduledInstances",
-									"ec2:StartInstances",
-									"ec2:StopInstances",
-									"ec2:TerminateInstances",
-									"ec2:UnassignPrivateIpAddresses",
-									"ec2:UnmonitorInstances"
-								],
-								"Resource": ["arn:aws:ec2:::"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
+										"cloudtrail:AddTags",
+										"cloudtrail:CreateTrail",
+										"cloudtrail:DeleteTrail",
+										"cloudtrail:DescribeTrails",
+										"cloudtrail:GetEventSelectors",
+										"cloudtrail:GetTrailStatus",
+										"cloudtrail:ListPublicKeys",
+										"cloudtrail:ListTags",
+										"cloudtrail:LookupEvents",
+										"cloudtrail:PutEventSelectors",
+										"cloudtrail:RemoveTags",
+										"cloudtrail:StartLogging",
+										"cloudtrail:StopLogging",
+										"cloudtrail:UpdateTrail"
+									],
 
+									"Resource": ["arn:aws:cloudtrail:*:*:*"]
+								}
+							]
+						}
+					},
+
+
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-cloudwatch-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
+									"Effect": "Allow",
+									"Action": [
+										"logs:CreateLogGroup",
+										"logs:CreateLogStream",
+										"logs:DeleteDestination",
+										"logs:DeleteLogGroup",
+										"logs:DeleteLogStream",
+										"logs:DescribeDestinations",
+										"logs:DescribeExportTasks",
+										"logs:DescribeLogGroups",
+										"logs:DescribeLogStreams",
+										"logs:FilterLogEvents",
+										"logs:GetLogEvents",
+										"logs:PutDestination",
+										"logs:PutDestinationPolicy",
+										"logs:PutLogEvents"
+									],
+									"Resource": ["arn:aws:logs:*:*:*"]
+								},
+								{
+									"Effect": "Allow",
+									"Action": [
+										"cloudwatch:DescribeAlarmHistory",
+										"cloudwatch:DeleteAlarms",
+										"cloudwatch:DescribeAlarms",
+										"cloudwatch:DescribeAlarmsForMetric",
+										"cloudwatch:DisableAlarmActions",
+										"cloudwatch:EnableAlarmActions",
+										"cloudwatch:GetMetricData",
+										"cloudwatch:GetMetricStatistics",
+										"cloudwatch:ListMetrics",
+										"cloudwatch:PutMetricAlarm",
+										"cloudwatch:PutMetricData",
+										"cloudwatch:SetAlarmState"
+									],
+									"Resource": ["arn:aws:cloudwatch:*:*:*"]
+								}
+							]
+						}
+					},
+
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-ec2-and-firehose-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
+									"Effect": "Allow",
+									"Action": [
+										"ec2:Describe*",
+										"ec2:CreateTags",
+										"ec2:DeleteTags",
+										"ec2:AuthorizeSecurityGroupIngress",
+										"ec2:Describe*",
+										"ec2:StartInstances",
+										"ec2:StopInstances",
+										"ec2:RebootInstances",
+										"ec2:TerminateInstances"
+									],
+									"Resource": ["arn:aws:ec2:*:*:*"]
+								},
+								{
+									"Effect": "Allow",
+									"Action": [
+										"firehose:CreateDeliveryStream",
+										"firehose:DeleteDeliveryStream",
+										"firehose:DescribeDeliveryStream",
+										"firehose:ListDeliveryStreams",
+										"firehose:PutRecord",
+										"firehose:PutRecordBatch",
+										"firehose:UpdateDestination"
+									],
+									"Resource": ["arn:aws:firehose:*:*:*"]
+								}
+							]
+						}
+					},
+
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-elasticsearch-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
+								"Effect": "Allow",
+								"Action": [
 									"es:AddTags",
 									"es:CreateElasticsearchDomain",
 									"es:DeleteElasticsearchDomain",
@@ -1833,198 +1750,135 @@
 										}]
 									}]]
 								}
-							},
-							{
+							}]
+						}
+					},
 
-								"Effect": "Allow",
-								"Action": [
-									"firehose:CreateDeliveryStream",
-									"firehose:DeleteDeliveryStream",
-									"firehose:DescribeDeliveryStream",
-									"firehose:ListDeliveryStreams",
-									"firehose:PutRecord",
-									"firehose:PutRecordBatch",
-									"firehose:UpdateDestination"
-								],
-								"Resource": ["arn:aws:firehose:*:*:*"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"lambda:CreateAlias",
-									"lambda:CreateEventSourceMapping",
-									"lambda:AddPermission",
-									"lambda:DeleteAlias",
-									"lambda:DeleteEventSourceMapping",
-									"lambda:GetAccountSettings",
-									"lambda:GetAlias",
-									"lambda:GetEventSourceMapping",
-									"lambda:GetFunction",
-									"lambda:GetFunctionConfiguration",
-									"lambda:GetPolicy",
-									"lambda:InvokeAsync",
-									"lambda:InvokeFunction",
-									"lambda:ListAliases",
-									"lambda:ListEventSourceMappings",
-									"lambda:ListFunctions",
-									"lambda:PublishVersion",
-									"lambda:RemovePermission",
-									"lambda:UpdateAlias",
-									"lambda:UpdateEventSourceMapping",
-									"lambda:UpdateFunctionCode",
-									"lambda:UpdateFunctionConfiguration"
-								],
-								"Resource": {
-									"Fn::GetAttr": ["lambda ", "Arn "]
+
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-rds-and-lambda-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
+
+									"Effect": "Allow",
+									"Action": ["*"],
+									"Resource": ["arn:aws:rds:*:*:*"]
+								},
+								{
+									"Effect": "Allow",
+									"Action": [
+										"lambda:CreateAlias",
+										"lambda:CreateEventSourceMapping",
+										"lambda:AddPermission",
+										"lambda:DeleteAlias",
+										"lambda:DeleteEventSourceMapping",
+										"lambda:GetAccountSettings",
+										"lambda:GetAlias",
+										"lambda:GetEventSourceMapping",
+										"lambda:GetFunction",
+										"lambda:GetFunctionConfiguration",
+										"lambda:GetPolicy",
+										"lambda:InvokeAsync",
+										"lambda:InvokeFunction",
+										"lambda:ListAliases",
+										"lambda:ListEventSourceMappings",
+										"lambda:ListFunctions",
+										"lambda:PublishVersion",
+										"lambda:RemovePermission",
+										"lambda:UpdateAlias",
+										"lambda:UpdateEventSourceMapping",
+										"lambda:UpdateFunctionCode",
+										"lambda:UpdateFunctionConfiguration"
+									],
+									"Resource": ["arn:aws:lambda:*:*:*"]
 								}
-							},
-							{
+							]
+						}
+					},
 
-								"Effect": "Allow",
-								"Action": [
-									"rds:AddSourceIdentifierToSubscription",
-									"rds:AuthorizeDBSecurityGroupIngress",
-									"rds:CopyDBClusterSnapshot",
-									"rds:AddTagsToResource",
-									"rds:CopyDBParameterGroup",
-									"rds:CopyDBSnapshot",
-									"rds:CopyOptionGroup",
-									"rds:DeleteDBClusterParameterGroup",
-									"rds:DeleteDBClusterSnapshot",
-									"rds:DeleteDBCluster",
-									"rds:DeleteDBInstance",
-									"rds:DeleteDBParameterGroup",
-									"rds:DeleteDBSecurityGroup",
-									"rds:DeleteDBSnapshot",
-									"rds:DeleteDBSubnetGroup",
-									"rds:DeleteOptionGroup",
-									"rds:DescribeAccountAttributes",
-									"rds:DescribeEngineDefaultClusterParameters",
-									"rds:DescribeEngineDefaultParameters",
-									"rds:DescribeDBClusterParameterGroups",
-									"rds:DescribeDBClusterParameters",
-									"rds:DescribeDBClusterSnapshots",
-									"rds:DescribeDBClusters",
-									"rds:DescribeDBInstances",
-									"rds:DescribeDBLogFiles",
-									"rds:DescribeDBParameterGroups",
-									"rds:DescribeDBParameters",
-									"rds:DescribeDBSecurityGroups",
-									"rds:DescribeDBSubnetGroups",
-									"rds:DescribeEventCategories",
-									"rds:DescribeEvents",
-									"rds:FailoverDBCluster",
-									"rds:ListTagsForResource",
-									"rds:ModifyDBClusterParameterGroup",
-									"rds:ModifyDBCluster",
-									"rds:ModifyDBInstance",
-									"rds:ModifyDBParameterGroup",
-									"rds:ModifyDBSubnetGroup",
-									"rds:ModifyOptionGroup",
-									"rds:PromoteReadReplica"
-								],
-								"Resource": ["arn:aws:rds:::"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-iam-and-redshift-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
+									"Effect": "Allow",
+									"Action": [
+										"redshift:ModifyCluster",
+										"redshift:RebootCluster",
+										"redshift:CancelQuerySession",
+										"redshift:ViewQueriesInConsole",
+										"redshift:DescribeClusters",
+										"redshift:DescribeClusterSecurityGroups"
+									],
+									"Resource": ["arn:aws:redshift:*:*:*"]
+								},
+								{
+									"Effect": "Allow",
+									"Action": [
+										"iam:AttachRolePolicy",
+										"iam:PassRole",
+										"iam:PutRolePolicy",
+										"iam:CreateRole",
+										"iam:GetRole",
+										"iam:ListRoles",
+										"iam:GetRolePolicy",
+										"iam:ListAttachedRolePolicies",
+										"iam:ListInstanceProfiles",
+										"iam:ListRolePolicies",
+										"iam:GetInstanceProfile"
+									],
+									"Resource": ["*"]
+								}
+							]
+						}
+					},
 
-									"redshift:AuthorizeClusterSecurityGroupIngress",
-									"redshift:AuthorizeSnapshotAccess",
-									"redshift:CreateCluster",
-									"redshift:CreateClusterUser",
-									"redshift:CreateClusterParameterGroup",
-									"redshift:CreateClusterSecurityGroup",
-									"redshift:CreateClusterSubnetGroup",
-									"redshift:CreateEventSubscription",
-									"redshift:CreateHsmClientCertificate",
-									"redshift:CreateHsmConfiguration",
-									"redshift:CreateTags",
-									"redshift:DeleteCluster",
-									"redshift:DeleteClusterParameterGroup",
-									"redshift:DeleteClusterSecurityGroup",
-									"redshift:DeleteClusterSnapshot",
-									"redshift:DeleteClusterSubnetGroup",
-									"redshift:DeleteEventSubscription",
-									"redshift:DeleteHsmClientCertificate",
-									"redshift:DeleteHsmConfiguration",
-									"redshift:DeleteTags",
-									"redshift:DescribeClusterParameterGroups",
-									"redshift:DescribeClusterParameters",
-									"redshift:DescribeClusterSecurityGroups",
-									"redshift:DescribeClusterSnapshots",
-									"redshift:DescribeClusterSubnetGroups",
-									"redshift:DescribeClusterVersions",
-									"redshift:DescribeClusters",
-									"redshift:DescribeDefaultClusterParameters",
-									"redshift:DescribeEventCategories",
-									"redshift:DescribeEventSubscriptions",
-									"redshift:DescribeEvents",
-									"redshift:DescribeHsmClientCertificates",
-									"redshift:DescribeHsmConfigurations",
-									"redshift:DescribeLoggingStatus",
-									"redshift:DescribeOrderableClusterOptions",
-									"redshift:DescribeReservedNodeOfferings",
-									"redshift:DescribeReservedNodes",
-									"redshift:DescribeResize",
-									"redshift:DescribeTags",
-									"redshift:DisableLogging",
-									"redshift:DisableSnapshotCopy",
-									"redshift:EnableLogging",
-									"redshift:EnableSnapshotCopy",
-									"redshift:GetClusterCredentials",
-									"redshift:JoinGroup",
-									"redshift:ModifyCluster",
-									"redshift:ModifyClusterParameterGroup",
-									"redshift:ModifyClusterSubnetGroup",
-									"redshift:ModifyEventSubscription",
-									"redshift:ModifySnapshotCopyRetentionPeriod",
-									"redshift:PurchaseReservedNodeOffering",
-									"redshift:RebootCluster",
-									"redshift:ResetClusterParameterGroup",
-									"redshift:RestoreFromClusterSnapshot",
-									"redshift:RevokeClusterSecurityGroupIngress",
-									"redshift:RevokeSnapshotAccess",
-									"redshift:RotateEncryptionKey",
-									"redshift:ViewQueriesInConsole",
-									"redshift:CancelQuerySession"
-								],
-								"Resource": ["arn:aws:redshift:::"]
-							},
-							{
+					{
+						"PolicyName": {
+							"Fn::Join": ["", ["dl-webserver-policy-datapipeline-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PolicyDocument": {
+							"Version": "2012-10-17",
+							"Statement": [{
 								"Effect": "Allow",
 								"Action": [
-									"iam:AddRoleToInstanceProfile",
-									"iam:AttachRolePolicy",
-									"iam:DeletePolicy",
-									"iam:DeletePolicyVersion",
-									"iam:DeleteRole",
-									"iam:DeleteRolePolicy",
-									"iam:DetachGroupPolicy",
-									"iam:DetachRolePolicy",
-									"iam:GetAccountSummary",
-									"iam:GetInstanceProfile",
-									"iam:GetPolicy",
-									"iam:GetRole",
-									"iam:GetRolePolicy",
-									"iam:ListAttachedRolePolicies",
-									"iam:ListEntitiesForPolicy",
-									"iam:ListInstanceProfiles",
-									"iam:ListInstanceProfilesForRole",
-									"iam:ListPolicies",
-									"iam:ListRolePolicies",
-									"iam:ListRoles",
-									"iam:PassRole",
-									"iam:PutRolePolicy"
-								],
-								"Resource": ["arn:aws:iam:::"]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-
+									"datapipeline:AddTags",
 									"datapipeline:ActivatePipeline",
-									"discovery:CreateTags",
 									"datapipeline:CreatePipeline",
 									"datapipeline:DeactivatePipeline",
 									"datapipeline:DeletePipeline",
@@ -2045,275 +1899,277 @@
 									"datapipeline:SetTaskStatus",
 									"datapipeline:ValidatePipelineDefinition"
 								],
-								"Resource": ["arn:aws:datapipeline:::"]
-							}
-						]
-					}
-				}]
-			},
-
-
-			"WebServerGroup": {
-				"Type": "AWS::AutoScaling::AutoScalingGroup",
-				"Properties": {
-					"VPCZoneIdentifier": [{
-						"Ref": "PublicSubnet1"
-					}, {
-						"Ref": "PublicSubnet2"
-					}],
-					"LaunchConfigurationName": {
-						"Ref": "LaunchConfig"
-					},
-					"MaxSize": "1",
-					"MinSize": "1",
-					"Tags": [{
-							"Key": "solution",
-							"Value": {
-								"Fn::Join": ["", ["datalake-", {
-									"Ref": "AWS::AccountId"
-								}, "-", {
-									"Fn::Select": ["4", {
-										"Fn::Split": ["-", {
-											"Fn::Select": ["2", {
-												"Fn::Split": ["/", {
-													"Ref": "AWS::StackId"
-												}]
-											}]
-										}]
-									}]
-								}]]
-							},
-							"PropagateAtLaunch": "true"
-						},
-						{
-							"Key": "Name",
-							"Value": {
-								"Fn::Join": ["", ["datalake-webserver-", {
-									"Ref": "AWS::AccountId"
-								}, "-", {
-									"Fn::Select": ["4", {
-										"Fn::Split": ["-", {
-											"Fn::Select": ["2", {
-												"Fn::Split": ["/", {
-													"Ref": "AWS::StackId"
-												}]
-											}]
-										}]
-									}]
-								}]]
-							},
-							"PropagateAtLaunch": "true"
+								"Resource": ["*"]
+							}]
 						}
-					]
+					}
+				]
+			}
+		},
 
+		"WebServerGroup": {
+			"Type": "AWS::AutoScaling::AutoScalingGroup",
+			"Properties": {
+				"VPCZoneIdentifier": [{
+					"Ref": "PublicSubnet1"
+				}, {
+					"Ref": "PublicSubnet2"
+				}],
+				"LaunchConfigurationName": {
+					"Ref": "LaunchConfig"
+				},
+				"MaxSize": "1",
+				"MinSize": "1",
+				"Tags": [{
+						"Key": "solution",
+						"Value": {
+							"Fn::Join": ["", ["datalake-", {
+								"Ref": "AWS::AccountId"
+							}, "-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PropagateAtLaunch": "true"
+					},
+					{
+						"Key": "Name",
+						"Value": {
+							"Fn::Join": ["", ["datalake-webserver-", {
+								"Ref": "AWS::AccountId"
+							}, "-", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}]]
+						},
+						"PropagateAtLaunch": "true"
+					}
+				]
+
+			}
+		},
+
+		"LaunchConfig": {
+			"Type": "AWS::AutoScaling::LaunchConfiguration",
+			"Metadata": {
+				"Comment1": "Configure the bootstrap helpers to install the Apache Web Server and PHP",
+
+				"AWS::CloudFormation::Init": {
+					"configSets": {
+						"Install": ["Install", "Fileset"]
+					},
+
+					"Fileset": {
+						"files": {
+							"/tmp/dl-auth.file": {
+								"content": {
+									"Fn::Join": [
+										"", ["DatabaseUserName|", {
+												"Ref": "MasterUsername"
+											}, "\n",
+											"DatabaseUserPassword|", {
+												"Ref": "MasterUserPassword"
+											}, "\n"
+										]
+									]
+								},
+								"mode": "000440",
+								"owner": "root",
+								"group": "root"
+							}
+						}
+					},
+
+					"Install": {
+						"packages": {
+							"yum": {
+								"mysql-config": [],
+								"mysql55-server": [],
+								"php56w-mbstring": [],
+								"php56w-mysql": [],
+								"php56w-gd": [],
+								"php56w-cli": [],
+								"php56w": [],
+								"php56w-xml": [],
+								"httpd": [],
+								"php56w-pgsql": []
+							}
+						},
+						"services": {
+							"sysvinit": {
+								"httpd": {
+									"enabled": "true",
+									"ensureRunning": "true"
+								},
+								"mysqld": {
+									"enabled": "true",
+									"ensureRunning": "true"
+								}
+							}
+						}
+					}
 				}
 			},
-
-			"LaunchConfig": {
-				"Type": "AWS::AutoScaling::LaunchConfiguration",
-				"Metadata": {
-					"Comment1": "Configure the bootstrap helpers to install the Apache Web Server and PHP",
-
-					"AWS::CloudFormation::Init": {
-						"configSets": {
-							"Install": ["Install", "Fileset"]
-						},
-
-						"Fileset": {
-							"files": {
-								"/tmp/dl-auth.file": {
-									"content": {
-										"Fn::Join": [
-											"", ["DatabaseUserName|", {
-													"Ref": "MasterUsername"
-												}, "\n",
-												"DatabaseUserPassword|", {
-													"Ref": "MasterUserPassword"
-												}, "\n"
-											]
-										]
-									},
-									"mode": "000440",
-									"owner": "root",
-									"group": "root"
-								}
-							}
-						},
-
-						"Install": {
-							"packages": {
-								"yum": {
-									"mysql-config": [],
-									"mysql55-server": [],
-									"php56w-mbstring": [],
-									"php56w-mysql": [],
-									"php56w-gd": [],
-									"php56w-cli": [],
-									"php56w": [],
-									"php56w-xml": [],
-									"httpd": [],
-									"php56w-pgsql": []
-								}
+			"Properties": {
+				"KeyName": {
+					"Ref": "KeyPairName"
+				},
+				"ImageId": {
+					"Fn::FindInMap": ["AWSAMItoRegionMap", {
+						"Ref": "AWS::Region"
+					}, "AMLXPVM"]
+				},
+				"IamInstanceProfile": {
+					"Ref": "EC2WebserverIamProfile"
+				},
+				"InstanceType": {
+					"Ref": "InstanceType"
+				},
+				"SecurityGroups": [{
+					"Ref": "WebserverSecurityGroups"
+				}],
+				"UserData": {
+					"Fn::Base64": {
+						"Fn::Join": ["", [
+							"#!/bin/bash -xev \n",
+							"yum install -y aws-cfn-bootstrap\n",
+							"wget ", " ", {
+								"Fn::FindInMap": ["AWSInfoRegionMap", {
+									"Ref": "AWS::Region"
+								}, "QuickStartS3URL"]
+							}, "/", {
+								"Ref": "QSS3BucketName"
+							}, "/", {
+								"Ref": "QSS3KeyPrefix"
+							}, "/scripts/repo/dlpackages.repo -O /etc/yum.repos.d/dlpackages.repo\n",
+							"yum clean all\n", "/opt/aws/bin/cfn-init ",
+							" --stack ", {
+								"Ref": "AWS::StackName"
 							},
-							"services": {
-								"sysvinit": {
-									"httpd": {
-										"enabled": "true",
-										"ensureRunning": "true"
-									},
-									"mysqld": {
-										"enabled": "true",
-										"ensureRunning": "true"
-									}
+							" --resource LaunchConfig ",
+							" --configsets Install ",
+							" --region ", {
+								"Ref": "AWS::Region"
+							}, "\n",
+							"wget ", " ", {
+								"Fn::FindInMap": ["AWSInfoRegionMap", {
+									"Ref": "AWS::Region"
+								}, "QuickStartS3URL"]
+							}, "/", {
+								"Ref": "QSS3BucketName"
+							}, "/", {
+								"Ref": "QSS3KeyPrefix"
+							}, "/scripts/configure.sh;cat configure.sh | tr -d '\r' > configure_l.sh;chmod 777 configure_l.sh;./configure_l.sh ",
+							{
+								"Ref": "AWS::AccountId"
+							}, " ", {
+								"Ref": "AWS::Region"
+							}, " ", {
+								"Ref": "AdminEmailID"
+							}, " ",
+							{
+								"Fn::GetAtt": ["RDSdb", "Endpoint.Address"]
+							}, " ",
+							{
+								"Fn::GetAtt": ["RedshiftCluster", "Endpoint.Address"]
+							}, " ",
+							{
+								"Fn::GetAtt": ["RedshiftSecondaryRole", "Arn"]
+							}, " ", {
+								"Ref": "RDSdb"
+							}, " ", {
+								"Ref": "DBName"
+							}, " ", {
+								"Ref": "RedshiftCluster"
+							}, " ", {
+								"Ref": "DBName"
+							}, " ",
+							{
+								"Fn::GetAtt": ["ElasticsearchDomain", "DomainEndpoint"]
+							}, " ",
+							{
+								"Ref": "DataLakeS3Bucket"
+							}, " ", {
+								"Ref": "AWS::StackId"
+							}, " ", {
+								"Fn::Select": ["4", {
+									"Fn::Split": ["-", {
+										"Fn::Select": ["2", {
+											"Fn::Split": ["/", {
+												"Ref": "AWS::StackId"
+											}]
+										}]
+									}]
+								}]
+							}, " ",
+							{
+								"Ref": "AWS::StackName"
+							}, " ", {
+								"Fn::Base64": {
+									"Ref": "WebserverWaitHandle"
 								}
-							}
-						}
+							}, " ", {
+								"Ref": "DatalakeFirehoseStream"
+							}, " ", {
+								"Ref": "DatalakeCloudtrail"
+							}, " ",
+							{
+								"Fn::FindInMap": ["AWSInfoRegionMap", {
+									"Ref": "AWS::Region"
+								}, "QuickStartS3URL"]
+							}, " ", {
+								"Ref": "QSS3BucketName"
+							}, " ", {
+								"Ref": "QSS3KeyPrefix"
+							}, "\n"
+						]]
 					}
 				},
-				"Properties": {
-					"ImageId": {
-						"Fn::FindInMap": ["AWSAMItoRegionMap", {
-							"Ref": "AWS::Region"
-						}, "AMLXPVM"]
-					},
-					"IamInstanceProfile": {
-						"Ref": "EC2WebserverIamProfile"
-					},
-					"InstanceType": {
-						"Ref": "InstanceType"
-					},
-					"SecurityGroups": [{
-						"Ref": "WebserverSecurityGroups"
-					}],
-					"UserData": {
-						"Fn::Base64": {
-							"Fn::Join": ["", [
-								"#!/bin/bash \n",
-								"yum install -y aws-cfn-bootstrap\n",
-								"wget ", " ", {
-									"Fn::FindInMap": ["AWSInfoRegionMap", {
-										"Ref": "AWS::Region"
-									}, "QuickStartS3URL"]
-								}, "/", {
-									"Ref": "QSS3BucketName"
-								}, "/", {
-									"Ref": "QSS3KeyPrefix"
-								}, "/scripts/repo/dlpackages.repo -O /etc/yum.repos.d/dlpackages.repo\n",
-								"yum clean all\n",
-								"/opt/aws/bin/cfn-init ",
-								"         --stack ", {
-									"Ref": "AWS::StackName"
-								},
-								"         --resource LaunchConfig ",
-								"         --configsets Install ",
-								"         --region ", {
-									"Ref": "AWS::Region"
-								}, "\n",
-								"wget ", " ", {
-									"Fn::FindInMap": ["AWSInfoRegionMap", {
-										"Ref": "AWS::Region"
-									}, "QuickStartS3URL"]
-								}, "/", {
-									"Ref": "QSS3BucketName"
-								}, "/", {
-									"Ref": "QSS3KeyPrefix"
-								}, "/scripts/configure.sh;cat configure.sh | tr -d '\r' > configure_l.sh;chmod 777 configure_l.sh;./configure_l.sh ",
-								{
-									"Ref": "AWS::AccountId"
-								}, " ", {
-									"Ref": "AWS::Region"
-								}, " ", {
-									"Ref": "AdminEmailID"
-								}, " ",
-								{
-									"Fn::GetAtt": ["RDSdb", "Endpoint.Address"]
-								}, " ",
-								{
-									"Fn::GetAtt": ["RedshiftCluster", "Endpoint.Address"]
-								}, " ",
-								{
-									"Fn::GetAtt": ["RedshiftSecondaryRole", "Arn"]
-								}, " ", {
-									"Ref": "RDSdb"
-								}, " ", {
-									"Ref": "DBName"
-								}, " ", {
-									"Ref": "RedshiftCluster"
-								}, " ", {
-									"Ref": "DBName"
-								}, " ",
-								{
-									"Fn::GetAtt": ["ElasticsearchDomain", "DomainEndpoint"]
-								}, " ",
-								{
-									"Ref": "DataLakeS3Bucket"
-								}, " ", {
-									"Ref": "AWS::StackId"
-								}, " ", {
-									"Fn::Select": ["4", {
-										"Fn::Split": ["-", {
-											"Fn::Select": ["2", {
-												"Fn::Split": ["/", {
-													"Ref": "AWS::StackId"
-												}]
-											}]
-										}]
-									}]
-								}, " ",
-								{
-									"Ref": "AWS::StackName"
-								}, " ", {
-									"Fn::Base64": {
-										"Ref": "WebserverWaitHandle"
-									}
-								}, " ", {
-									"Ref": "DatalakeFirehoseStream"
-								}, " ", {
-									"Ref": "DatalakeCloudtrail"
-								}, " ",
-								{
-									"Fn::FindInMap": ["AWSInfoRegionMap", {
-										"Ref": "AWS::Region"
-									}, "QuickStartS3URL"]
-								}, " ", {
-									"Ref": "QSS3BucketName"
-								}, " ", {
-									"Ref": "QSS3KeyPrefix"
-								}, "\n"
-							]]
-						}
-					},
 
-					"BlockDeviceMappings": [{
-						"DeviceName": "/dev/sda1",
-						"Ebs": {
-							"VolumeType": "gp2",
-							"DeleteOnTermination": "true",
-							"VolumeSize": "30"
-						}
-					}]
-				}
-			},
+				"BlockDeviceMappings": [{
+					"DeviceName": "/dev/sda1",
+					"Ebs": {
+						"VolumeType": "gp2",
+						"DeleteOnTermination": "true",
+						"VolumeSize": "30"
+					}
+				}]
+			}
+		},
 
 
-			"WebserverWaitHandle": {
-				"Type": "AWS::CloudFormation::WaitConditionHandle",
-				"Properties": {}
-			},
+		"WebserverWaitHandle": {
+			"Type": "AWS::CloudFormation::WaitConditionHandle",
+			"Properties": {}
+		},
 
-			"WebserverWaitCondtion": {
-				"Type": "AWS::CloudFormation::WaitCondition",
-				"DependsOn": "WebServerGroup",
-				"Properties": {
-					"Handle": {
-						"Ref": "WebserverWaitHandle"
-					},
-					"Timeout": "800"
-				}
-
+		"WebserverWaitCondtion": {
+			"Type": "AWS::CloudFormation::WaitCondition",
+			"DependsOn": "WebServerGroup",
+			"Properties": {
+				"Handle": {
+					"Ref": "WebserverWaitHandle"
+				},
+				"Timeout": "800"
 			}
 
 		}
+
+
 	},
 
 	"Outputs": {
